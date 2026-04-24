@@ -1,0 +1,15 @@
+name: Sonar Java CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  # This job calls the reusable workflow we created in Step 1
+  call-sonar-scan:
+    uses: ./.github/workflows/reusable-java-sonar.yml
+    with:
+      java-version: '17'
+      project-key: 'devketsops_spring-boot-hello-world'
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
