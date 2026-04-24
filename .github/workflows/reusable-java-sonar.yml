@@ -1,0 +1,42 @@
+name: Reusable Java & Sonar Scanner
+
+on:
+  workflow_call:
+    # 1. Inputs: These are like "Arguments" you pass to a function
+    inputs:
+      java-version:
+        required: false
+        type: string
+        default: '17'
+      project-key:
+        required: true
+        type: string
+    # 2. Secrets: Sensitive data that the caller must provide
+    secrets:
+      SONAR_TOKEN:
+        required: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and Scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn -B verify sonar:sonar \
+            -Dsonar.projectKey=${{ inputs.project-key }} \
+            -Dsonar.host.url=https://sonarcloud.io
