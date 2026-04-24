@@ -11,5 +11,6 @@ jobs:
     with:
       java-version: '17'
       project-key: 'devketsops_spring-boot-hello-world'
+      organization: 'devketsops'
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
