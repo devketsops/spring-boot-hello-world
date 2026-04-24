@@ -25,26 +25,40 @@ A professional demonstration of a modern DevOps lifecycle. This repository has b
 We follow the **Principle of Least Privilege**. The application runs under a dedicated non-root system user to minimize the security attack surface.
 
 ```dockerfile
-# Foundation: Alpine Linux with JRE 17 (Lightweight & Secure)
+# STAGE 1: Build (The "Kitchen")
+# We use a full Maven image to compile the code
+FROM maven:3.9.6-eclipse-temurin-17-alpine AS build
+WORKDIR /build
+
+# Copy only the files needed for the build
+COPY pom.xml .
+COPY src ./src
+
+# Compile and package the JAR
+RUN mvn clean package -DskipTests
+
+# STAGE 2: Run (The "Serving Table")
+# We switch to a tiny JRE image for the actual runtime
 FROM eclipse-temurin:17-jre-alpine
 
-# Security: Create a non-privileged system user/group
-RUN addgroup -S spring && adduser -S spring -G spring
+# 1. Security: Create a system user with no shell access
+RUN addgroup -S spring && \
+    adduser -S -s /sbin/nologin -G spring spring
 
-# Workspace: Isolated & owned by the 'spring' user
+# 2. Set the working directory
 WORKDIR /app
-RUN chown spring:spring /app
 
-# Privilege Drop: Switch to the 'spring' user
+# 3. Security: Copy ONLY the JAR from the build stage
+# We use --from=build to grab the file from the previous stage
+COPY --from=build --chown=spring:spring /build/target/*.jar app.jar
+
+# 4. Privilege Drop: Switch to the non-root user
 USER spring
 
-# Artifact: Copy compiled JAR with explicit ownership
-COPY --chown=spring:spring target/*.jar app.jar
-
-# Documentation: Port mapping
+# Spring Boot default port
 EXPOSE 8080
 
-# Execution: Start application as non-root
+# 5. Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
