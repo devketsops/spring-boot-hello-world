@@ -11,6 +11,9 @@ on:
       project-key:
         required: true
         type: string
+      organization:
+        required: true
+        type: string
     # 2. Secrets: Sensitive data that the caller must provide
     secrets:
       SONAR_TOKEN:
@@ -39,4 +42,5 @@ jobs:
         run: |
           mvn -B verify sonar:sonar \
             -Dsonar.projectKey=${{ inputs.project-key }} \
+            -Dsonar.organization=${{ inputs.organization }} \
             -Dsonar.host.url=https://sonarcloud.io
